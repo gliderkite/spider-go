@@ -112,11 +112,15 @@ type urlFilter interface {
 type sameDomainFilter struct{}
 
 func (filter *sameDomainFilter) filterMap(rootUrl, parentUrl *url.URL, rawUrl string) *url.URL {
+	if len(rawUrl) == 0 {
+		return nil
+	}
+
 	// sanitize the raw URL
 	rawUrl = strings.TrimSuffix(rawUrl, "/")
 	rawUrl, err := url.PathUnescape(rawUrl)
 	if err != nil {
-		fmt.Println("URL Unescape error:", rawUrl, err)
+		//fmt.Println("URL Unescape error:", rawUrl, err)
 		return nil
 	}
 
@@ -136,7 +140,7 @@ func (filter *sameDomainFilter) filterMap(rootUrl, parentUrl *url.URL, rawUrl st
 	}
 
 	if err != nil {
-		fmt.Println("Invalid URL:", rawUrl, err)
+		//fmt.Println("Invalid URL:", rawUrl, err)
 		return nil
 	}
 

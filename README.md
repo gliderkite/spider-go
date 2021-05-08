@@ -2,14 +2,11 @@
 
 
 ## TODO
-- [ ] Replace `fmt` with log levels
-- [ ] Command line argument parser
-- [ ] Limit URLs to visit per step
-- [ ] Set HTTP client timeout
 - [ ] Proper visibility to types and functions
 - [ ] Optimize?
 - [ ] Unit tests!
 - [ ] Integration tests!
+- [ ] Remove unused fmt.Print
 - [ ] Documentation
     - [ ] What has been prioritized?
     - [ ] Tradeoff
@@ -23,3 +20,4 @@
 - Logger
 - Error handling could be improved (requires signal back, retries?)
 - URL parsing more adherent to specs
+- Integration tests: can we guarantee a stable internet connection? Use custom website to crawl with known sitemap.
