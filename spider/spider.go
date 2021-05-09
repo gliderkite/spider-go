@@ -82,6 +82,7 @@ func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
 
 	// channel used to asynchronously crawl the URLs in the frontiers
 	pageCh := make(chan pageUrls, spider.conf.concurrency)
+	eventId := rootUrl.Hostname()
 
 	for len(frontier) > 0 {
 		//fmt.Println("\nFrontier size:", len(frontier))
@@ -112,7 +113,7 @@ func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
 
 			// mark and signal that this page has been visited
 			visited[pageRes.Url.String()] = pageRes.Url
-			spider.eventCh <- newPageVisited(rootUrl.Hostname(), &pageRes)
+			spider.eventCh <- newPageVisited(eventId, &pageRes)
 
 			// store the set of URLs that will be part of the frontier at the next step
 			if pageRes.Err == nil {

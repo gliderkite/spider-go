@@ -19,5 +19,7 @@
 - Persistency (DB)
 - Logger
 - Error handling could be improved (requires signal back, retries?)
+    - Pages that returned an error
+    - Parsing of URL (filter map)
 - URL parsing more adherent to specs
 - Integration tests: can we guarantee a stable internet connection? Use custom website to crawl with known sitemap.

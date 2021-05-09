@@ -28,14 +28,11 @@ func runEventLoop(eventCh chan spider.Event) {
 			fmt.Printf("\n[%v] Crawling '%s' started\n", event.When().Unix(), event.Id())
 		case *spider.PageVisited:
 			if event.Page.Err == nil {
-				// TODO
 				// log all the URLs that belong to the same domain found in this page
-				fmt.Printf("\n[%v] Visited '%s'", event.When().Unix(), event.Page.Url)
-				//for url := range *event.Page.Urls {
-				//	fmt.Printf("\t%s\n", url)
-				//}
-			} else {
-				//fmt.Printf("\n[%v] Crawling '%s' error: %v\n", event.When().Unix(), event.Page().Url, event.Page().Err)
+				fmt.Printf("\n[%v] Visited '%s'\n", event.When().Unix(), event.Page.Url)
+				for url := range *event.Page.Urls {
+					fmt.Printf("\t%s\n", url)
+				}
 			}
 		case *spider.CrawlingEnded:
 			fmt.Printf("\n[%v] Crawling '%s' ended! Visited %d unique URLs\n", event.When().Unix(), event.Id(), event.VisitedCount)

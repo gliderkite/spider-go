@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -75,31 +76,83 @@ func TestSameDomainFilter(t *testing.T) {
 
 	filter := &sameDomainFilter{}
 
-	// same do"main
+	// same domain
 	rawUrl := "https://monzo.com"
 	if url := filter.filterMap(rootUrl, parentUrl, rawUrl); url == nil {
-		t.Errorf("URL should have not been filtered")
+		t.Errorf("'%s' should have not been filtered", rawUrl)
 	} else if url.String() != rawUrl {
-		t.Errorf("invalid URL path")
+		t.Errorf("invalid URL path: %s", url)
 	}
 
 	rawUrl = "https://monzo.com/help/savings"
 	if url := filter.filterMap(rootUrl, parentUrl, rawUrl); url == nil {
-		t.Errorf("URL should have not been filtered")
+		t.Errorf("'%s' should have not been filtered", rawUrl)
 	} else if url.String() != rawUrl {
-		t.Errorf("invalid URL path")
+		t.Errorf("invalid URL path: %s", url)
 	}
 
 	// different domain
-	if filter.filterMap(rootUrl, parentUrl, "https://google.com") != nil {
-		t.Errorf("URL should have been filtered")
+	rawUrl = "https://google.com"
+	if filter.filterMap(rootUrl, parentUrl, rawUrl) != nil {
+		t.Errorf("'%s' should have been filtered", rawUrl)
+	}
+
+	// subdomain
+	rawUrl = "https://community.monzo.com"
+	if filter.filterMap(rootUrl, parentUrl, rawUrl) != nil {
+		t.Errorf("'%s' should have been filtered", rawUrl)
 	}
 
 	// invalid URL
-	if filter.filterMap(rootUrl, parentUrl, "%%%") != nil {
-		t.Errorf("URL should have been filtered")
+	rawUrl = "%"
+	if filter.filterMap(rootUrl, parentUrl, rawUrl) != nil {
+		t.Errorf("'%s' should have been filtered", rawUrl)
 	}
-	if filter.filterMap(rootUrl, parentUrl, "") != nil {
-		t.Errorf("URL should have been filtered")
+
+	rawUrl = ""
+	if filter.filterMap(rootUrl, parentUrl, rawUrl) != nil {
+		t.Errorf("'%s' should have been filtered", rawUrl)
 	}
+}
+
+// NOTE: This integration test requires a connection to the internet.
+func TestCrawler(t *testing.T) {
+	const timeout = time.Duration(1) * time.Second
+	rootUrl, _ := url.Parse("https://monzo.com")
+	pageCh := make(chan pageUrls)
+
+	crawler := newCrawler(rootUrl, timeout)
+
+	// should crawl a reachable URL
+	go crawler.crawl(rootUrl, pageCh)
+	if pageRes := <-pageCh; pageRes.Err != nil {
+		t.Errorf("Error crawling '%s': %v", rootUrl, pageRes.Err)
+	}
+
+	// should crawl a reachable URL page
+	url, _ := url.Parse("https://monzo.com/help")
+	go crawler.crawl(url, pageCh)
+	if pageRes := <-pageCh; pageRes.Err != nil {
+		t.Errorf("Error crawling '%s': %v", url, pageRes.Err)
+	}
+
+	// should not crawl a URL that returns 404
+	url, _ = url.Parse("https://monzo.com/not-help")
+	go crawler.crawl(url, pageCh)
+	if pageRes := <-pageCh; pageRes.Err == nil {
+		t.Errorf("Should not crawl '%s'", url)
+	}
+
+	// should not crawl a not existing domain
+	url, _ = url.Parse("https://monzo.pt")
+	go crawler.crawl(url, pageCh)
+	if pageRes := <-pageCh; pageRes.Err == nil {
+		t.Errorf("Should not crawl '%s'", url)
+	}
+}
+
+func TestCrawlerSiteMap(t *testing.T) {
+	// TODO: This integration test requires knowledge of the precise sitemap
+	// of the URL to crawl, so that it would be possible to compare the set
+	// of URLs crawled to those that were expected.
 }
