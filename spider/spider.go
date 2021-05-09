@@ -12,7 +12,7 @@ import (
 
 const (
 	// Default URL to crawl.
-	defaultUrl = "https://monzo.com/"
+	defaultUrl = "https://monzo.com"
 	// Default maximum number of URLs visited concurrently.
 	defaultConcurrency = 64
 	// Default HTTP request timeout in seconds.
