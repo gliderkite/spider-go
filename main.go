@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"spider-go/spider"
 )
 
@@ -27,11 +28,13 @@ func runEventLoop(eventCh chan spider.Event) {
 		case *spider.CrawlingStarted:
 			fmt.Printf("\n[%v] Crawling '%s' started\n", event.When().Unix(), event.Id())
 		case *spider.PageVisited:
+			u, _ := url.PathUnescape(event.Page.Url.String())
+			fmt.Printf("\n[%v] Visited '%v'\n", event.When().Unix(), u)
 			if event.Page.Err == nil {
 				// log all the URLs that belong to the same domain found in this page
-				fmt.Printf("\n[%v] Visited '%s'\n", event.When().Unix(), event.Page.Url)
-				for url := range *event.Page.Urls {
-					fmt.Printf("\t%s\n", url)
+				for u := range *event.Page.Urls {
+					u, _ = url.PathUnescape(u)
+					fmt.Printf("\t%s\n", u)
 				}
 			}
 		case *spider.CrawlingEnded:

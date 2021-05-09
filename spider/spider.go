@@ -72,13 +72,13 @@ func (spider *Spider) Crawl(rawUrl string) {
 }
 
 // Run the crawling logic. Returns the visited URLs map.
-func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
+func (spider *Spider) run(rootUrl *url.URL) *urlsSet {
 	// the crawler implementation
 	crawler := newCrawler(rootUrl, spider.conf.timeout)
 	// the URLs left to visit (DFS)
 	frontier := []*url.URL{rootUrl}
 	// the set of URLs already visited
-	visited := make(urlsMap)
+	visited := make(urlsSet)
 
 	// channel used to asynchronously crawl the URLs in the frontiers
 	pageCh := make(chan pageUrls, spider.conf.concurrency)
@@ -92,13 +92,6 @@ func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
 		toVisitCount := min(len(frontier), spider.conf.concurrency)
 		//fmt.Printf("Visiting %d URLs\n", toVisitCount)
 
-		// concurrent crawling a subset of the frontier
-		for i := 0; i < toVisitCount; i++ {
-			go crawler.crawl(frontier[i], pageCh)
-		}
-		frontier = frontier[toVisitCount:]
-
-		toVisitNext := make(urlsMap)
 		// current frontier set to avoid inserting duplicates
 		// Note: this is a compromise that favors runtime over memory usage
 		frontierSet := make(urlsSet, len(frontier))
@@ -107,12 +100,20 @@ func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
 			frontierSet[key] = true
 		}
 
+		// concurrent crawling a subset of the frontier
+		for i := 0; i < toVisitCount; i++ {
+			go crawler.crawl(frontier[i], pageCh)
+		}
+		frontier = frontier[toVisitCount:]
+
+		toVisitNext := make(urlsMap)
 		// fetch crawling results
 		for i := 0; i < toVisitCount; i++ {
 			pageRes := <-pageCh
 
 			// mark and signal that this page has been visited
-			visited[pageRes.Url.String()] = pageRes.Url
+			key, _ := url.PathUnescape(pageRes.Url.String())
+			visited[key] = true
 			spider.eventCh <- newPageVisited(eventId, &pageRes)
 
 			// store the set of URLs that will be part of the frontier at the next step
@@ -132,27 +133,10 @@ func (spider *Spider) run(rootUrl *url.URL) *urlsMap {
 		// expand the frontiers with the new URLs to visit
 		for _, url := range toVisitNext {
 			frontier = append(frontier, url)
-
-			// TODO: remove in the end
-			checkDups(frontier)
 		}
 	}
 
 	return &visited
-}
-
-// TODO delete
-func checkDups(urls []*url.URL) {
-	urlsset := make(urlsSet)
-	for _, u := range urls {
-		key, _ := url.PathUnescape(u.String())
-		urlsset[key] = true
-	}
-
-	if len(urls) != len(urlsset) {
-		fmt.Println(urls)
-		panic("DUPLICATES!")
-	}
 }
 
 // Returns the minimum value between the 2 given integers.

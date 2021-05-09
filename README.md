@@ -62,6 +62,12 @@ Note: once the crawling is over, you will see a message stating so; to terminate
 the application you will need to abort the even loop and terminate the application
 with `Ctrl+C` (more on this choice in the design section).
 
+You can also run all the tests with:
+
+```console
+go test ./...
+```
+
 
 ## Design
 

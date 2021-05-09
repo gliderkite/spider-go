@@ -117,7 +117,7 @@ func (filter *sameDomainFilter) filterMap(rootUrl, parentUrl *url.URL, rawUrl st
 	}
 
 	// sanitize the raw URL
-	rawUrl = strings.TrimSuffix(rawUrl, "/")
+	rawUrl = strings.TrimSpace(strings.TrimSuffix(rawUrl, "/"))
 	rawUrl, err := url.PathUnescape(rawUrl)
 	if err != nil {
 		//fmt.Println("URL Unescape error:", rawUrl, err)

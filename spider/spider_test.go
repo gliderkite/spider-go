@@ -29,7 +29,8 @@ func TestSpider(t *testing.T) {
 		}
 		if event.Page.Err == nil {
 			// TODO: if this is a known sitemap, assert that the page visited
-			// belongs to the set of expected URL.
+			// belongs to the set of expected URL, and that the page has not
+			// been visited before.
 		} else {
 			t.Errorf("Error crawling '%s'", event.Page.Url)
 		}
